@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import mysql from 'mysql2';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -39,7 +40,7 @@ export async function getUsersById(id){
 
 export async function createUser(users)
 {
-    var pass = createPass('1234');
+    var pass = await bcrypt.hash('1234',10);
     if(users.length > 0)
     {
         const [rows] = await pool.query(`
@@ -58,7 +59,7 @@ export async function login(userlogin){
     `,[userlogin.email]);
     if(user[0])
     {
-        if(comparePass(userlogin.password,user[0].password))
+        if(await bcrypt.compare(userlogin.password,user[0].password))
         {
             return user[0];
         }else{

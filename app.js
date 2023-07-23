@@ -1,5 +1,7 @@
 import express from "express";
 import {createUser,getUsersById,getUsers,login} from './database.js';
+import { generateToken } from "./generateToken.js";
+import jwt from 'jsonwebtoken';
 
 const app = express();
 
@@ -37,13 +39,16 @@ app.post('/login', async (req,res)=>{
     const user = await login(req.body);
     if(user)
     {
+        const token = generateToken({user:user})
+        console.log(jwt.decode(token,process.env.ACCESS_TOKEN));
         const data = {
             "id":user.id,
             "name":user.name,
             "email":user.email,
-            "username":user.username
+            "username":user.username,
+            "access_token":token
         }
-        res.status(200).send({"msg":"Logged in successfully","data":data,"status":200});
+        res.status(200).json({"msg":"Logged in successfully","data":data,"status":200});
     }
-    res.status(404).send({"msg":"Invalid username or password","data":{},"status":404});
+    res.status(404).json({"msg":"Invalid username or password","data":{},"status":404});
 })
