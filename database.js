@@ -39,12 +39,17 @@ export async function getUsersById(id){
 
 export async function createUser(users)
 {
-    var pass = createPass(users.password);
-    const [rows] = await pool.query(`
-        INSERT into users (name,email,username,password) values (?,?,?,?)
-    `,[users.name,users.email,users.username,pass]);
-    const userdata = await getUsersById(rows.insertId);
-    return userdata;
+    var pass = createPass('1234');
+    if(users.length > 0)
+    {
+        const [rows] = await pool.query(`
+            INSERT into users (name,email,username,password) values (?,?,?,?)
+        `,[users.name,users.email,users.username,pass]);
+        const userdata = await getUsersById(rows.insertId);
+        return userdata;
+    }else{
+        return false;
+    }
 }
 
 export async function login(userlogin){

@@ -13,10 +13,13 @@ app.listen(8080,()=>{
     console.log("Server runing on port 8080");
 });
 
-app.get('/',async (req,res)=>{
-    const [user] = await createUser({email:"saikat.mohanty@lipl.in",name:"Saikat Mohanty",username:"saikatmohanty",password:"1234"})
-    console.log(user);
-    return res.send(user)
+app.post('/create',async (req,res)=>{
+    const [user] = await createUser(req.body);
+    if(user)
+    {
+        res.status(200).send({"msg":"User added successfully","status":"200","data":user});
+    }
+    res.status(404).send({"msg":"Failed to add users","status":"404","data":{}})
 });
 
 app.get('/list',async (req,res)=>{
