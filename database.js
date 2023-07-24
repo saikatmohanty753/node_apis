@@ -41,7 +41,7 @@ export async function getUsersById(id){
 export async function createUser(users)
 {
     var pass = await bcrypt.hash('1234',10);
-    if(users.length > 0)
+    if(Object.keys(users).length > 0)
     {
         const [rows] = await pool.query(`
             INSERT into users (name,email,username,password) values (?,?,?,?)

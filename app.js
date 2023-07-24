@@ -1,11 +1,12 @@
 import express from "express";
 import {createUser,getUsersById,getUsers,login} from './database.js';
 import { generateToken } from "./generateToken.js";
-import jwt from 'jsonwebtoken';
+import { body, validationResult } from "express-validator";
 
 const app = express();
 
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
 
 app.use((err,req,res,next)=>{
     console.error(err.stack);
@@ -15,32 +16,52 @@ app.listen(8080,()=>{
     console.log("Server runing on port 8080");
 });
 
-app.post('/create',async (req,res)=>{
-    const [user] = await createUser(req.body);
+app.post('/create',[
+    body('name').notEmpty().withMessage('Please enter your name'),
+    body('email').notEmpty().withMessage('Please enter your valid email'),
+    body('username').notEmpty().withMessage('Please enter your username')
+],async (req,res)=>{
+    
+    const errors = validationResult(req);
+    if(!errors.isEmpty())
+    {
+        const errorResponse = {};
+        let i =0;
+        errors.array().forEach(error => {
+            errorResponse[i] = error.msg;
+            i++;
+        });
+        return res.status(400).json({ data: errorResponse,status:400,msg:"error" });
+    }
+    const user = await createUser(req.body);
     if(user)
     {
-        res.status(200).send({"msg":"User added successfully","status":"200","data":user});
+        return res.status(200).json({"msg":"User added successfully","status":"200","data":user});
     }
-    res.status(404).send({"msg":"Failed to add users","status":"404","data":{}})
+    return res.status(404).json({"msg":"Failed to add users","status":"404","data":{}})
 });
 
 app.get('/list',async (req,res)=>{
     const [userlist] = await getUsers();
-    res.send(userlist);
+    return res.status(200).json(userlist);
 });
 
 app.get('/userdata/:id',async (req,res)=>{
     const id = req.params.id;
     const user = await getUsersById(id)
-    res.send(user);
+    return res.status(200).json(user);
 });
 
 app.post('/login', async (req,res)=>{
-    const user = await login(req.body);
+    const {email,password} = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+    const user = await login({email:email,password:password});
     if(user)
     {
         const token = generateToken({user:user})
-        console.log(jwt.decode(token,process.env.ACCESS_TOKEN));
+        /* console.log(jwt.decode(token,process.env.ACCESS_TOKEN)); */
         const data = {
             "id":user.id,
             "name":user.name,
@@ -48,7 +69,7 @@ app.post('/login', async (req,res)=>{
             "username":user.username,
             "access_token":token
         }
-        res.status(200).json({"msg":"Logged in successfully","data":data,"status":200});
+        return res.status(200).json({"msg":"Logged in successfully","data":data,"status":200});
     }
-    res.status(404).json({"msg":"Invalid username or password","data":{},"status":404});
+    return res.status(404).json({"msg":"Invalid username or password","data":{},"status":404});
 })
