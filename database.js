@@ -69,3 +69,18 @@ export async function login(userlogin){
         return false;
     }
 }
+
+export async function deleteUser(id){
+    if(!id)
+    {
+        return false;
+    }else{
+        const res = await pool.query(`
+            Delete from users where id = ?
+        `,[id]);
+        if(res)
+        {
+            return true;
+        }
+    }
+}

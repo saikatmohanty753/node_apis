@@ -1,10 +1,12 @@
 import express from "express";
-import {createUser,getUsersById,getUsers,login} from './database.js';
+import {createUser,getUsersById,getUsers,login,deleteUser} from './database.js';
 import { generateToken } from "./generateToken.js";
 import { body, validationResult } from "express-validator";
+import cors from 'cors';
 
 const app = express();
 
+app.use(cors({origin:"http://localhost:3000"}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 
@@ -54,6 +56,7 @@ app.get('/userdata/:id',async (req,res)=>{
 
 app.post('/login', async (req,res)=>{
     const {email,password} = req.body;
+    console.log(req.body);
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required.' });
     }
@@ -72,4 +75,18 @@ app.post('/login', async (req,res)=>{
         return res.status(200).json({"msg":"Logged in successfully","data":data,"status":200});
     }
     return res.status(404).json({"msg":"Invalid username or password","data":{},"status":404});
+});
+
+app.get('/delete-user/:id',async (req,res)=>{
+    const id = req.params.id;
+    if(!id)
+    {
+        return res.status(401).json({status:401,data:"error",msg:"error"});
+    }
+    const isDelete = await deleteUser(id);
+    if(isDelete)
+    {
+        return res.status(200).json({status:200,data:"",msg:"success"});
+    }
+    return res.status(404).json({status:404,msg:"error",data:""});
 })
